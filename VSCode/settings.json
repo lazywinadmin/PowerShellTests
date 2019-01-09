@@ -1,0 +1,34 @@
+{
+    // tips https://www.youtube.com/watch?v=wSPEfm7jlGQ
+    "editor.renderIndentGuides": true,
+    "editor.renderWhitespace": "all",
+    "window.zoomLevel": 2,
+    "workbench.iconTheme": "vscode-great-icons",
+
+    "explorer.sortOrder": "type",
+
+    "files.autoSaveDelay": 1000,
+    "files.autoSave": "afterDelay",
+
+    "update.channel": "default",
+
+    "editor.fontLigatures": true,
+    "editor.fontFamily": "Consolas, 'Courier New', monospace", // firacode-retina
+
+    "editor.minimap.enabled": false,
+    "editor.formatOnPaste": true,
+    
+    "[json]": {
+        "editor.minimap.enabled": true,
+        "editor.minimap.maxColumn": 40
+    },
+    "[markdown]": {
+        "editor.wordWrap": "on",
+        "editor.quickSuggestions": false
+    },
+    "workbench.tips.enabled": false,
+    // "explorer.openEditors.visible": 9 
+    "terminal.integrated.cursorStyle": "line",
+    // "terminal.integrated.shell.windows": "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+    "terminal.integrated.cwd": "%home%"
+}

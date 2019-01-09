@@ -1,0 +1,15 @@
+﻿[CmdletBinding()]
+PARAM(
+    $A,
+    $B,
+    $C
+)
+TRY{
+    $PSCmdlet.myinvocation.line
+    Get-Process
+    Get-Service
+    $PSCmdlet.myinvocation.line
+    $myinvocation.line
+}
+CATCH{}
+FINALLY{}

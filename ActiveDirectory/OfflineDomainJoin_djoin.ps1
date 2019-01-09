@@ -5,10 +5,24 @@
 
 .Notes
     Based on code from 'WinPENanoDomainJoin' https://gist.github.com/Ryan2065/79838b78643d2311d60cb6147e3b87bf
+    Microsoft documentation: https://docs.microsoft.com/en-us/windows/desktop/api/lmjoin/nf-lmjoin-netcreateprovisioningpackage
 #>
-PARAM()
+[CmdletBinding()]
+PARAM(
+    [Parameter(Mandatory=$true)]
+    $machinename,# = $args[0]
+    [Parameter(Mandatory=$true)]
+    $domain, # = $args[1]
+    [Parameter(Mandatory=$true)]
+    $user, # = $args[2]
+    [Parameter(Mandatory=$true)]
+    $password, # = $args[3]
+    $machineaccountou,
+    $dcname,
+    $OSDisk # = $args[4]
+)
 
-$source = @'
+$source = @"
 using System;
 using System.Security.Principal;
 using System.Runtime.InteropServices;
@@ -245,7 +259,7 @@ namespace ECGCAT
 
     public class WinPENanoDomainJoin
     {
-        public static string WinPE_DJoin(String username, [Optional]String domain, String password, String machinename)
+        public static string WinPE_DJoin(String username, [Optional]String domain, String password, String machinename, String machineaccountou, String dcname)
         {
             WindowsIdentity winId = WindowsIdentity.GetCurrent();
             //Console.WriteLine("Current User Identity : {0}", winId.Name);
@@ -319,7 +333,9 @@ namespace ECGCAT
                 provisioningParams.dwVersion = 1;
                 provisioningParams.lpDomain = domain;
                 provisioningParams.lpHostName = machinename;
-                provisioningParams.dwProvisionOptions = 2;
+                provisioningParams.dwProvisionOptions = 2; // Reuse https://docs.microsoft.com/en-us/windows/desktop/api/lmjoin/nf-lmjoin-netprovisioncomputeraccount
+                provisioningParams.lpMachineAccountOU = machineaccountou;
+                provisioningParams.lpDcName = dcname;
 
                 //IntPtr blob = new IntPtr();
                 //StringBuilder blob = new StringBuilder();
@@ -374,7 +390,7 @@ namespace ECGCAT
         }
     }
 }
-'@
+"@
 
 $result = Add-Type -TypeDefinition $Source -Language CSharp
 
@@ -386,14 +402,14 @@ $result = Add-Type -TypeDefinition $Source -Language CSharp
 Write-host "Reading Domain Join Information from $filename"
 
 #$tsenv = New-Object -COMObject Microsoft.SMS.TSEnvironment
-$machinename = $args[0]
-$domain = $args[1]
-$user = $args[2]
-$password = $args[3]
-$OSDisk = $args[4]
+#$machinename = $args[0]
+#$domain = $args[1]
+#$user = $args[2]
+#$password = $args[3]
+#$OSDisk = $args[4]
 
 try{
-    $offlinedomainblob = [ECGCAT.WinPENanoDomainJoin]::WinPE_DJoin( $user,$domain,$password , $machinename)
+    $offlinedomainblob = [ECGCAT.WinPENanoDomainJoin]::WinPE_DJoin($user,$domain,$password,$machinename,$machineaccountou,$dcname)
 }
 catch {
     
@@ -417,27 +433,27 @@ Write-Host "Domain Blob Created Successfully: $offlinedomainblob"
 
 
 try{
-$winpedomainjoinxml = New-Object -TypeName System.Xml.XmlDocument
-$winpedomainjoinxml.LoadXml($winpedomainjoin)
+    $winpedomainjoinxml = New-Object -TypeName System.Xml.XmlDocument
+    $winpedomainjoinxml.LoadXml($winpedomainjoin)
 
-$enc = New-Object System.Text.UTF8Encoding( $false )
-$wrt = New-Object System.XML.XMLTextWriter((join-path -path "$env:SystemDrive" -ChildPath "winpedomainjoin.xml"), $enc )
-$wrt.Formatting = 'Indented'
-$winpedomainjoinxml.Save($wrt)
-$wrt.close()
+    $enc = New-Object System.Text.UTF8Encoding( $false )
+    $wrt = New-Object System.XML.XMLTextWriter((join-path -path "$env:SystemDrive" -ChildPath "winpedomainjoin.xml"), $enc )
+    $wrt.Formatting = 'Indented'
+    $winpedomainjoinxml.Save($wrt)
+    $wrt.close()
 
-Write-Host "WinPE Domain Join Unattend File Created Successfully at " (join-path -path "$env:SystemDrive" -ChildPath "winpedomainjoin.xml")
+    Write-Host "WinPE Domain Join Unattend File Created Successfully at " (join-path -path "$env:SystemDrive" -ChildPath "winpedomainjoin.xml")
+    <#
+    Write-Host "Applying Unattend File"
 
-Write-Host "Applying Unattend File"
+    $InstallVolume = $OSDisk.replace(':','') 
 
-$InstallVolume = $OSDisk.replace(':','') 
-
-if(Test-Path ($InstallVolume  + ":\windows"))
-{
-    Write-Host "Applying Unattend File at $(("$InstallVolume" + ":\")) "
-    Apply-WindowsUnattend -UnattendPath (join-path -path "$env:SystemDrive" -ChildPath "winpedomainjoin.xml") -Path ("$InstallVolume" + ":\")
-
-}
+    if(Test-Path ($InstallVolume  + ":\windows"))
+    {
+        Write-Host "Applying Unattend File at $(("$InstallVolume" + ":\")) "
+        #Apply-WindowsUnattend -UnattendPath (join-path -path "$env:SystemDrive" -ChildPath "winpedomainjoin.xml") -Path ("$InstallVolume" + ":\")
+    }
+    #>
 }
 catch{
     

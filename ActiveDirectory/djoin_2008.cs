@@ -14,7 +14,7 @@ namespace Djoin
 
     public class Netapi32
     {
-        [DllImport("Netapi32.dll", EntryPoint = "NetProvisionComputerAccount", SetLastError = true, ExactSpelling = true, CharSet = CharSet.Unicode)]
+        [DllImport("netapi32.dll", EntryPoint = "NetProvisionComputerAccount", SetLastError = true, ExactSpelling = true, CharSet = CharSet.Unicode)]
             public static extern int NetProvisionComputerAccount(
                 string lpDomain,
                 string lpMachineName,
@@ -146,10 +146,10 @@ namespace Djoin
 
     public class DomainJoin
     {
-        public static int GetDomainJoin(String username,String password,String Domain,String Machine, String OU, String DC, out string DomainJoinBlob)
+        public static int GetDomainJoin(string username,string password,string Domain,string Machine,string OU,string DC,out string DomainJoinBlob)
         {
 
-            int result = -1;
+            int Result = -1;
 
             //define the handles
             IntPtr existingTokenHandle = IntPtr.Zero;
@@ -157,7 +157,7 @@ namespace Djoin
            
             //split domain and name
             String[] splitUserName = username.Split('\\');
-            userdomain = splitUserName[0];
+            string userdomain = splitUserName[0];
             username = splitUserName[1];
             
             try
@@ -204,7 +204,7 @@ namespace Djoin
 
                 Console.WriteLine("Calling NetProvisionComputerAccount");
 
-                int result = Netapi32.NetProvisionComputerAccount(Domain,Machine,OU,DC,2,IntPtr.Zero,IntPtr.Zero,out blob);
+                Result = Netapi32.NetProvisionComputerAccount(Domain,Machine,OU,DC,2,IntPtr.Zero,IntPtr.Zero,out blob);
 
                 DomainJoinBlob = blob;
 
@@ -217,7 +217,7 @@ namespace Djoin
                 }
                 else
                 {
-                    Console.WriteLine("RevertToSelf Failed")
+                    Console.WriteLine("RevertToSelf Failed");
                 }
             }
             finally
@@ -233,7 +233,7 @@ namespace Djoin
                 }
             }
 
-            return result;
+            return Result;
         }
 
         static void Main(string[] args)

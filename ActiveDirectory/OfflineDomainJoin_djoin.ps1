@@ -84,115 +84,27 @@ Try{
             public static extern int GetLastError();
             [DllImport("Kernel32.dll", SetLastError = true)]
             public static extern void CloseHandle(IntPtr existingTokenHandle);
-    
         }
     
         public class Netapi32
         {
-    
-            [System.Runtime.InteropServices.StructLayoutAttribute(System.Runtime.InteropServices.LayoutKind.Sequential)]
-            public class NetsetupProvisoningParams
-    
-            {
-    
-                // Version 1 fields  
-    
-                public uint dwVersion;
-    
-                [MarshalAs(UnmanagedType.LPWStr)]
-    
-                public string lpDomain;
-    
-                [MarshalAs(UnmanagedType.LPWStr)]
-    
-                public string lpHostName;
-    
-                [MarshalAs(UnmanagedType.LPWStr)]
-    
-                public string lpMachineAccountOU;
-    
-                [MarshalAs(UnmanagedType.LPWStr)]
-    
-                public string lpDcName;
-    
-    
-    
-                public uint dwProvisionOptions;
-    
-    
-    
-                //[MarshalAs(UnmanagedType.LPArray, ArraySubType=UnmanagedType.LPWStr, SizeParamIndex=7)]  
-    
-                //public string[] aCertTemplateNames;  
-    
-                public IntPtr aCertTemplateNames;  // hack until correct MarshalAs setting is figured out  
-    
-                public uint cCertTemplateNames;
-    
-    
-    
-                //[MarshalAs(UnmanagedType.LPWStr)]  
-    
-                //public string[] aMachinePolicyNames;  
-    
-                public IntPtr aMachinePolicyNames;  // hack until correct MarshalAs setting is figured out  
-    
-                public uint cMachinePolicyNames;
-    
-    
-    
-                //[MarshalAs(UnmanagedType.LPWStr)]  
-    
-                //public string[] aMachinePolicyPaths;  
-    
-                public IntPtr aMachinePolicyPaths;  // hack until correct MarshalAs setting is figured out  
-    
-                public uint cMachinePolicyPaths;
-    
-    
-    
-                // Version 2 fields  
-    
-                [MarshalAs(UnmanagedType.LPWStr)]
-    
-                public string lpNetbiosName;
-    
-                [MarshalAs(UnmanagedType.LPWStr)]
-    
-                public string lpSiteName;
-    
-                [MarshalAs(UnmanagedType.LPWStr)]
-    
-                public string lpPrimaryDNSDomain;
-    
-            }
-    
-            [DllImport("Netapi32.dll", EntryPoint = "NetCreateProvisioningPackage", SetLastError = true, ExactSpelling = true, CharSet = CharSet.Unicode)]
-    
-            public static extern int NetCreateProvisioningPackage  (
-    
-                 NetsetupProvisoningParams pProvisioningParams,
-    
-                 //[MarshalAs(UnmanagedType.LPArray, ArraySubType=UnmanagedType.U1, SizeParamIndex=2)]  
-    
-                 IntPtr ppPackageBinData,
-    
-                 IntPtr pdwPackageBinDataSize,
-    
-                 //[MarshalAs(UnmanagedType.LPWStr)]  
-    
-                 //working - IntPtr ppPackageText // should be out - not needed for now  
-                 [MarshalAs(UnmanagedType.LPWStr)]
-                 out string ppPackageText // should be out - not needed for now  
-             );
-    
-                }
+            [DllImport("netapi32.dll", EntryPoint = "NetProvisionComputerAccount", SetLastError = true, ExactSpelling = true, CharSet = CharSet.Unicode)]
+                public static extern int NetProvisionComputerAccount(
+                    string lpDomain,
+                    string lpMachineName,
+                    string lpMachineAccountOU,
+                    string lpDcName,
+                    int dwOptions,
+                    IntPtr pProvisionBinData,
+                    IntPtr pdwProvisionBinDataSize,
+                    [MarshalAs(UnmanagedType.LPWStr)]
+                    out string pProvisionTextData);
+        }
     
         public class AdvApi32
         {
             [DllImport("advapi32.DLL", SetLastError = true)]
             public static extern bool LogonUser(string lpszUsername, string lpszDomain, string lpszPassword, int dwLogonType, int dwLogonProvider, out IntPtr phToken);
-    
             [DllImport("advapi32.dll", SetLastError = true)]
             public extern static bool DuplicateToken(IntPtr ExistingTokenHandle, int SECURITY_IMPERSONATION_LEVEL, out IntPtr DuplicateTokenHandle);
             public enum LogonTypes
@@ -308,27 +220,20 @@ Try{
     
         public class DomainJoin
         {
-            public static string GetDomainJoin(String username,String password,String Domain,String Machine, String OU, String DC, out string DomainJoinBlob)
+            public static int GetDomainJoin(string username,string password,string Domain,string Machine,string OU,string DC,out string DomainJoinBlob)
             {
-                WindowsIdentity winId = WindowsIdentity.GetCurrent();
-                //Console.WriteLine("Current User Identity : {0}", winId.Name);
-                //if (winId != null)
-                //{
-                //    if (string.Compare(winId.Name, username, true) == 0)
-                //    {
-                //        return null;
-                //    }
-                //}
+    
+                int Result = -1;
     
                 //define the handles
                 IntPtr existingTokenHandle = IntPtr.Zero;
                 IntPtr duplicateTokenHandle = IntPtr.Zero;
-    
+               
                 //split domain and name
                 String[] splitUserName = username.Split('\\');
-                userdomain = splitUserName[0];
+                string userdomain = splitUserName[0];
                 username = splitUserName[1];
-    
+                
                 try
                 {
                     //get a security token
@@ -338,14 +243,13 @@ Try{
                         (int)AdvApi32.LogonTypes.LOGON32_LOGON_NEW_CREDENTIALS,
                         (int)AdvApi32.LogonProvider.LOGON32_PROVIDER_WINNT50,
                         out existingTokenHandle);
-                    
+    
                     Console.WriteLine("After Calling AdvApi32.LogonUser");
     
                     if (!isOkay)
                     {
                         int lastWin32Error = Marshal.GetLastWin32Error();
                         int lastError = Kernel32.GetLastError();
-    
                         throw new Exception("LogonUser Failed: " + lastWin32Error + " - " + lastError);
                     }
     
@@ -356,7 +260,7 @@ Try{
                         (int)AdvApi32.SecurityImpersonationLevel.SecurityImpersonation,
                         out duplicateTokenHandle);
     
-                    Console.WriteLine("After Calling AdvApi32.DuplicateToken");
+                    //Console.WriteLine("After Calling AdvApi32.DuplicateToken");
                     if (!isOkay)
                     {
                         int lastWin32Error = Marshal.GetLastWin32Error();
@@ -364,56 +268,34 @@ Try{
                         Kernel32.CloseHandle(existingTokenHandle);
                         throw new Exception("DuplicateToken Failed: " + lastWin32Error + " - " + lastError);
                     }
+    
                     // create an identity from the token
-    
-    
                     Console.WriteLine("Before Calling AdvApi32.ImpersonateLoggedOnUser(duplicateTokenHandle)");
                     AdvApi32.ImpersonateLoggedOnUser(duplicateTokenHandle);
                     Console.WriteLine("After Calling AdvApi32.ImpersonateLoggedOnUser(duplicateTokenHandle)");
-                    Console.WriteLine("After AdvApi32.ImpersonateLoggedOnUser User Identity : {0}", winId.Name);
     
-                    Netapi32.NetsetupProvisoningParams provisioningParams = new Netapi32.NetsetupProvisoningParams();
-                    provisioningParams.dwVersion = 1;
-                    provisioningParams.lpDomain = domain;
-                    provisioningParams.lpHostName = machine;
-                    provisioningParams.dwProvisionOptions = 2; // Reuse https://docs.microsoft.com/en-us/windows/desktop/api/lmjoin/nf-lmjoin-netprovisioncomputeraccount
-                    provisioningParams.lpMachineAccountOU = OU;
-                    provisioningParams.lpDcName = DC;
-    
-                    //IntPtr blob = new IntPtr();
-                    //StringBuilder blob = new StringBuilder();
                     String blob = String.Empty;
-                 
-                    //working - int result = Netapi32.NetCreateProvisioningPackage(provisioningParams, out a, out b, blob);
     
-                    int result = Netapi32.NetCreateProvisioningPackage(provisioningParams, IntPtr.Zero, IntPtr.Zero, out blob);
+                    Console.WriteLine("Calling NetProvisionComputerAccount");
+    
+                    Result = Netapi32.NetProvisionComputerAccount(Domain,Machine,OU,DC,2,IntPtr.Zero,IntPtr.Zero,out blob);
+    
                     DomainJoinBlob = blob;
     
-                    //string str = Marshal.PtrToStringAuto(blobptr);
-    
-    
                     Console.WriteLine("Domain Blob: {0}", blob);
-                    //Console.WriteLine("Before Calling WindowsIdentity(duplicateTokenHandle)");
-                    WindowsIdentity newId = new WindowsIdentity(duplicateTokenHandle);
+                    Console.WriteLine("Before Calling RevertToSelf");
     
-                    //Console.WriteLine("After Calling WindowsIdentity(duplicateTokenHandle)");
-    
-                    //Console.WriteLine("Before Calling newId.Impersonate()");
-    
-                    WindowsImpersonationContext impersonatedUser = newId.Impersonate();
-    
-    
-                    //Console.WriteLine("After Calling newId.Impersonate()");
-                    //Console.WriteLine("After Impersonation User Identity : {0}", winId.Name);
-    
-                    //return impersonatedUser;
-    
-                    return blob;
+                    if(AdvApi32.RevertToSelf())
+                    {
+                        Console.WriteLine("RevertToSelf Succeeded");
+                    }
+                    else
+                    {
+                        Console.WriteLine("RevertToSelf Failed");
+                    }
                 }
                 finally
                 {
-    
-                    //Console.WriteLine("Inside Finally");
                     //free all handles
                     if (existingTokenHandle != IntPtr.Zero)
                     {
@@ -424,12 +306,13 @@ Try{
                         Kernel32.CloseHandle(duplicateTokenHandle);
                     }
                 }
+    
+                return Result;
             }
     
             static void Main(string[] args)
             {
-                Console.WriteLine("{0}",WinPE_DJoin(username: args[0],password: args[1], machinename:"NetSetup02"));
-    
+                Console.WriteLine("MAIN CALLED");
                 Console.ReadLine();
             }
         }

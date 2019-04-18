@@ -1,0 +1,1 @@
+https://geektalk.tech/2015/03/26/azure-automation-creating-your-automation-credential/

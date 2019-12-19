@@ -24,5 +24,12 @@ az storage account list
 az group create -n "MSLearnTest01" -l "West US"
 
 # Format output
-az group list --format table
+az group list --output table
+
+# Create VM
+az vm create \
+  --resource-group CrmTestingResourceGroup \
+  --name CrmUnitTests \
+  --image UbuntuLTS
+
 

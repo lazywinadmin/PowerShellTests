@@ -1,0 +1,2 @@
+#https://blog.tyang.org/2018/09/21/azure-policy-to-restrict-storage-account-firewall-rules/
+#https://github.com/DPi30-Team/dpi30-source/blob/4a1bc0d84e2349c94ab1de78c61f6f426f16b672/code/arm/policy/policies/network/network-storage-acl.json

@@ -11,7 +11,7 @@
             },
             {
               "field": "Microsoft.Storage/storageAccounts/networkAcls.ipRules[*].value",
-              "notEquals": ""
+              "exists": true
             },
             {
               "field": "Microsoft.Storage/storageAccounts/networkAcls.ipRules[*].value",
@@ -30,8 +30,10 @@
               "exists": true
             },
             {
-              "field": "Microsoft.Storage/storageAccounts/networkAcls.defaultAction",
-              "equals": "Allow"
+              "not": {
+                  "field": "Microsoft.Storage/storageAccounts/networkAcls.defaultAction",
+                  "equals": "Deny"
+              }
             }
           ]
         }

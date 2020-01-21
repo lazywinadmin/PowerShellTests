@@ -16,6 +16,14 @@
             {
               "field": "Microsoft.Storage/storageAccounts/networkAcls.ipRules[*].value",
               "notin": "[parameters('allowedAddressRanges')]"
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.Storage/storageAccounts"
             },
             {
               "field": "Microsoft.Storage/storageAccounts/networkAcls.defaultAction",
